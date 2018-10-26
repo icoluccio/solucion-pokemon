@@ -19,7 +19,7 @@ class Pokemon {
 	}
 
 	method atacar(otroPokemon) {
-		if (estado.puedoAtacar()) {
+		if (self.vivo() && estado.puedoAtacar()) {
 			self.elegirAtaque().atacar(self, otroPokemon)
 		}
 		estado.afectar(self)
@@ -27,6 +27,10 @@ class Pokemon {
 
 	method recibirDanio(danio) {
 		vida -= 0.min(danio - (defensa / 10))
+	}
+
+	method vivo() {
+		return vida > 0
 	}
 
 }
@@ -42,7 +46,11 @@ class Entrenador {
 		pokemon.add(unPokemon)
 	}
 
-	method proximoPokemon() = pokemon.anyOne()
+	method pokemonVivos() = pokemon.filter({ p => p.vivo() })
+
+	method proximoPokemon() = self.pokemonVivos().anyOne()
+
+	method noMasPokemon() = self.pokemonVivos().empty()
 
 }
 
@@ -106,6 +114,37 @@ object placaje {
 	}
 
 	method danio(atacante) = atacante.ataque()
+
+}
+
+class Combate {
+
+	var unEntrenador
+	var otroEntrenador
+
+	method pelear() {
+		if (!self.termino()) {
+			self.hacerTurno()
+			self.pelear()
+		}
+	}
+
+	method hacerTurno() {
+		var unPokemon = unEntrenador.proximoPokemon()
+		var otroPokemon = otroEntrenador.proximoPokemon()
+		unPokemon.atacar(otroPokemon)
+		otroPokemon.atacar(unPokemon)
+	}
+
+	method atacar(unPokemon, otroPokemon, entrenador) {
+		if (unPokemon.vivo()) {
+			unPokemon.atacar(otroPokemon)
+		}
+	}
+
+	method termino() {
+		return unEntrenador.noMasPokemon() || otroEntrenador.noMasPokemon()
+	}
 
 }
 
